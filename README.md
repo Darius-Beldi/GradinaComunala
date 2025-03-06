@@ -29,6 +29,9 @@ The system is built around the following key entities:
 - **UNELTE_SARCINI** - Tracks which tools are needed for specific tasks
 - **RECOLTE** - Records yield information from plots
 
+![image](https://github.com/user-attachments/assets/c2e14a59-a351-40e1-a6af-4400343c861d)
+
+
 ## Features
 
 - **Member Management**: Track contact information (nume, prenume, email, telefon), registration dates (data_inscriere), and active status (activ)
