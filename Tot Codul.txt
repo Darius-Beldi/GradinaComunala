@@ -1,0 +1,516 @@
+--ex 4
+CREATE TABLE MEMBRII (
+    membru_id NUMBER(10) PRIMARY KEY,
+    nume VARCHAR2(50) NOT NULL,
+    prenume VARCHAR2(50) NOT NULL,
+    email VARCHAR2(100) UNIQUE NOT NULL,
+    telefon VARCHAR2(15),
+    data_inscriere DATE DEFAULT SYSDATE NOT NULL,
+    activ NUMBER(1) DEFAULT 1 CHECK (activ IN (0,1))
+);
+
+CREATE TABLE PARCELE (
+    parcela_id NUMBER(10) PRIMARY KEY,
+    locatie VARCHAR2(100) NOT NULL,
+    suprafata_mp NUMBER(6,2) NOT NULL,
+    acces_apa NUMBER(1) DEFAULT 0 CHECK (acces_apa IN (0,1)),
+    taxa_lunara NUMBER(8,2) NOT NULL,
+    stare VARCHAR2(20) CHECK (stare IN ('Disponibila', 'Ocupata', 'In Mentenanta'))
+);
+
+CREATE TABLE ATRIBUIRI_PARCELE (
+    atribuire_id NUMBER(10) PRIMARY KEY,
+    membru_id NUMBER(10) REFERENCES MEMBRII(membru_id),
+    parcela_id NUMBER(10) REFERENCES PARCELE(parcela_id),
+    data_inceput DATE NOT NULL,
+    data_sfarsit DATE,
+    CONSTRAINT chk_date CHECK (data_sfarsit > data_inceput)
+);
+
+CREATE TABLE PLANTE (
+    planta_id NUMBER(10) PRIMARY KEY,
+    nume VARCHAR2(50) NOT NULL,
+    specie VARCHAR2(50) NOT NULL,
+    instructiuni_ingrijire CLOB,
+    timp_crestere_zile NUMBER(4),
+    sezon VARCHAR2(20) CHECK (sezon IN ('Primavara', 'Vara', 'Toamna', 'Iarna', 'Tot anul'))
+);
+
+CREATE TABLE RECOLTE (
+    recolta_id NUMBER(10) PRIMARY KEY,
+    atribuire_parcela_id NUMBER(10) REFERENCES ATRIBUIRI_PARCELE(atribuire_id),
+    planta_id NUMBER(10) REFERENCES PLANTE(planta_id),
+    data_recoltare DATE NOT NULL,
+    cantitate_kg NUMBER(6,2) NOT NULL,
+    evaluare_calitate VARCHAR2(20) CHECK (evaluare_calitate IN ('Excelenta', 'Buna', 'Medie', 'Slaba'))
+);
+
+CREATE TABLE SARCINI_INTRETINERE (
+    sarcina_id NUMBER(10) PRIMARY KEY,
+    descriere VARCHAR2(200) NOT NULL,
+    prioritate VARCHAR2(20) CHECK (prioritate IN ('Urgenta', 'Mare', 'Medie', 'Mica')),
+    durata_estimata NUMBER(4) NOT NULL,
+    necesita_unelte NUMBER(1) DEFAULT 0 CHECK (necesita_unelte IN (0,1))
+);
+
+CREATE TABLE PROGRAMARI_SARCINI (
+    programare_id NUMBER(10) PRIMARY KEY,
+    sarcina_id NUMBER(10) REFERENCES SARCINI_INTRETINERE(sarcina_id),
+    parcela_id NUMBER(10) REFERENCES PARCELE(parcela_id),
+    membru_asignat_id NUMBER(10) REFERENCES MEMBRII(membru_id),
+    data_programata DATE NOT NULL,
+    stare VARCHAR2(20) CHECK (stare IN ('Programata', 'In Desfasurare', 'Finalizata', 'Anulata'))
+);
+
+CREATE TABLE UNELTE (
+    unealta_id NUMBER(10) PRIMARY KEY,
+    denumire VARCHAR2(50) NOT NULL,
+    stare VARCHAR2(20) CHECK (stare IN ('Noua', 'Buna', 'Necesita Reparatii', 'Defecta')),
+    ultima_intretinere DATE,
+    disponibila NUMBER(1) DEFAULT 1 CHECK (disponibila IN (0,1)),
+    cost_inlocuire NUMBER(8,2)
+);
+
+CREATE TABLE PLANTE_PARCELE (
+    planta_id NUMBER(10) REFERENCES PLANTE(planta_id),
+    atribuire_parcela_id NUMBER(10) REFERENCES ATRIBUIRI_PARCELE(atribuire_id),
+    data_plantare DATE NOT NULL,
+    CONSTRAINT pk_plante_parcele PRIMARY KEY (planta_id, atribuire_parcela_id)
+);
+
+CREATE TABLE UNELTE_SARCINI (
+    unealta_id NUMBER(10) REFERENCES UNELTE(unealta_id),
+    sarcina_id NUMBER(10) REFERENCES SARCINI_INTRETINERE(sarcina_id),
+    cantitate NUMBER(2) DEFAULT 1,
+    CONSTRAINT pk_unelte_sarcini PRIMARY KEY (unealta_id, sarcina_id)
+);
+/
+--ex 5 
+CREATE SEQUENCE seq_membrii START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_parcele START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_atribuiri START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_plante START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_recolte START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_sarcini START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_programari START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_unelte START WITH 1 INCREMENT BY 1;
+
+INSERT INTO membrii VALUES (seq_membrii.NEXTVAL, 'Popescu', 'Ion', 'popescu.ion@email.com', '0722111222', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 1);
+INSERT INTO membrii VALUES (seq_membrii.NEXTVAL, 'Ionescu', 'Maria', 'ionescu.maria@email.com', '0733222333', TO_DATE('2024-01-02', 'YYYY-MM-DD'), 1);
+INSERT INTO membrii VALUES (seq_membrii.NEXTVAL, 'Popa', 'Ana', 'popa.ana@email.com', '0744333444', TO_DATE('2024-01-03', 'YYYY-MM-DD'), 1);
+INSERT INTO membrii VALUES (seq_membrii.NEXTVAL, 'Dumitrescu', 'Vasile', 'dumitrescu.vasile@email.com', '0755444555', TO_DATE('2024-01-04', 'YYYY-MM-DD'), 1);
+INSERT INTO membrii VALUES (seq_membrii.NEXTVAL, 'Stanescu', 'Elena', 'stanescu.elena@email.com', '0766555666', TO_DATE('2024-01-05', 'YYYY-MM-DD'), 1);
+INSERT INTO membrii VALUES (seq_membrii.NEXTVAL, 'Georgescu', 'Andrei', 'georgescu.andrei@email.com', '0777666777', TO_DATE('2024-01-06', 'YYYY-MM-DD'), 1);
+
+INSERT INTO PARCELE VALUES (seq_parcele.NEXTVAL, 'Zona A1', 50.00, 1, 100.00, 'Ocupata');
+INSERT INTO PARCELE VALUES (seq_parcele.NEXTVAL, 'Zona A2', 45.00, 1, 90.00, 'Ocupata');
+INSERT INTO PARCELE VALUES (seq_parcele.NEXTVAL, 'Zona B1', 60.00, 1, 120.00, 'Ocupata');
+INSERT INTO PARCELE VALUES (seq_parcele.NEXTVAL, 'Zona B2', 55.00, 1, 110.00, 'In Mentenanta');
+INSERT INTO PARCELE VALUES (seq_parcele.NEXTVAL, 'Zona C1', 40.00, 0, 80.00, 'Disponibila');
+INSERT INTO PARCELE VALUES (seq_parcele.NEXTVAL, 'Zona C2', 48.00, 1, 95.00, 'Ocupata');
+
+INSERT INTO PLANTE VALUES (seq_plante.NEXTVAL, 'Rosii', 'Solanum lycopersicum', 'Udare regulata, multa lumina', 90, 'Vara');
+INSERT INTO PLANTE VALUES (seq_plante.NEXTVAL, 'Castraveti', 'Cucumis sativus', 'Udare moderata, suport pentru crestere', 60, 'Vara');
+INSERT INTO PLANTE VALUES (seq_plante.NEXTVAL, 'Salata', 'Lactuca sativa', 'Udare regulata, umbra partiala', 45, 'Primavara');
+INSERT INTO PLANTE VALUES (seq_plante.NEXTVAL, 'Morcovi', 'Daucus carota', 'Sol afanat, udare moderata', 70, 'Tot anul');
+INSERT INTO PLANTE VALUES (seq_plante.NEXTVAL, 'Ceapa', 'Allium cepa', 'Sol bine drenat, udare redusa', 100, 'Primavara');
+INSERT INTO PLANTE VALUES (seq_plante.NEXTVAL, 'Ardei', 'Capsicum annuum', 'Multa lumina, caldura', 80, 'Vara');
+
+INSERT INTO ATRIBUIRI_PARCELE VALUES (seq_atribuiri.NEXTVAL, 1, 1, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO ATRIBUIRI_PARCELE VALUES (seq_atribuiri.NEXTVAL, 2, 2, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO ATRIBUIRI_PARCELE VALUES (seq_atribuiri.NEXTVAL, 3, 3, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO ATRIBUIRI_PARCELE VALUES (seq_atribuiri.NEXTVAL, 4, 6, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO ATRIBUIRI_PARCELE VALUES (seq_atribuiri.NEXTVAL, 5, 1, TO_DATE('2023-01-01', 'YYYY-MM-DD'), TO_DATE('2023-12-31', 'YYYY-MM-DD'));
+INSERT INTO ATRIBUIRI_PARCELE VALUES (seq_atribuiri.NEXTVAL, 6, 2, TO_DATE('2023-01-01', 'YYYY-MM-DD'), TO_DATE('2023-12-31', 'YYYY-MM-DD'));
+
+INSERT INTO UNELTE VALUES (seq_unelte.NEXTVAL, 'Lopata', 'Buna', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 1, 100.00);
+INSERT INTO UNELTE VALUES (seq_unelte.NEXTVAL, 'Grebla', 'Buna', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 1, 50.00);
+INSERT INTO UNELTE VALUES (seq_unelte.NEXTVAL, 'Foarfeca gradinarit', 'Noua', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 1, 75.00);
+INSERT INTO UNELTE VALUES (seq_unelte.NEXTVAL, 'Stropitoare', 'Buna', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 1, 40.00);
+INSERT INTO UNELTE VALUES (seq_unelte.NEXTVAL, 'Furca', 'Necesita Reparatii', TO_DATE('2023-12-01', 'YYYY-MM-DD'), 0, 90.00);
+INSERT INTO UNELTE VALUES (seq_unelte.NEXTVAL, 'Roaba', 'Buna', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 1, 200.00);
+
+INSERT INTO SARCINI_INTRETINERE VALUES (seq_sarcini.NEXTVAL, 'Plivit buruieni', 'Medie', 120, 1);
+INSERT INTO SARCINI_INTRETINERE VALUES (seq_sarcini.NEXTVAL, 'Fertilizare sol', 'Mare', 90, 1);
+INSERT INTO SARCINI_INTRETINERE VALUES (seq_sarcini.NEXTVAL, 'Tundere gard viu', 'Mica', 60, 1);
+INSERT INTO SARCINI_INTRETINERE VALUES (seq_sarcini.NEXTVAL, 'Verificare sistem irigatie', 'Urgenta', 45, 0);
+INSERT INTO SARCINI_INTRETINERE VALUES (seq_sarcini.NEXTVAL, 'Curatare alei', 'Medie', 90, 1);
+INSERT INTO SARCINI_INTRETINERE VALUES (seq_sarcini.NEXTVAL, 'Pregatire sol', 'Mare', 180, 1);
+
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 1, 1, 1, TO_DATE('2024-02-01', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 2, 2, 2, TO_DATE('2024-02-02', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 3, 3, 3, TO_DATE('2024-02-03', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 4, 4, 4, TO_DATE('2024-02-04', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 5, 5, 5, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 6, 6, 6, TO_DATE('2024-02-06', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 1, 2, 3, TO_DATE('2024-02-07', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 2, 3, 4, TO_DATE('2024-02-08', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 3, 4, 5, TO_DATE('2024-02-09', 'YYYY-MM-DD'), 'Programata');
+INSERT INTO PROGRAMARI_SARCINI VALUES (seq_programari.NEXTVAL, 4, 5, 6, TO_DATE('2024-02-10', 'YYYY-MM-DD'), 'Programata');
+
+INSERT INTO RECOLTE VALUES (seq_recolte.NEXTVAL, 1, 1, TO_DATE('2024-09-01', 'YYYY-MM-DD'), 25.5, 'Excelenta');
+INSERT INTO RECOLTE VALUES (seq_recolte.NEXTVAL, 2, 2, TO_DATE('2024-08-15', 'YYYY-MM-DD'), 15.3, 'Buna');
+INSERT INTO RECOLTE VALUES (seq_recolte.NEXTVAL, 3, 3, TO_DATE('2024-05-20', 'YYYY-MM-DD'), 8.7, 'Medie');
+INSERT INTO RECOLTE VALUES (seq_recolte.NEXTVAL, 4, 4, TO_DATE('2024-10-10', 'YYYY-MM-DD'), 20.0, 'Buna');
+INSERT INTO RECOLTE VALUES (seq_recolte.NEXTVAL, 5, 5, TO_DATE('2024-06-01', 'YYYY-MM-DD'), 12.8, 'Excelenta');
+INSERT INTO RECOLTE VALUES (seq_recolte.NEXTVAL, 1, 6, TO_DATE('2024-09-15', 'YYYY-MM-DD'), 18.2, 'Buna');
+
+INSERT INTO PLANTE_PARCELE VALUES (1, 1, TO_DATE('2024-04-01', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (2, 1, TO_DATE('2024-04-01', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (3, 2, TO_DATE('2024-03-15', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (4, 2, TO_DATE('2024-03-15', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (5, 3, TO_DATE('2024-03-01', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (6, 3, TO_DATE('2024-03-01', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (1, 4, TO_DATE('2024-04-15', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (2, 4, TO_DATE('2024-04-15', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (3, 5, TO_DATE('2024-03-20', 'YYYY-MM-DD'));
+INSERT INTO PLANTE_PARCELE VALUES (4, 6, TO_DATE('2024-03-20', 'YYYY-MM-DD'));
+
+INSERT INTO UNELTE_SARCINI VALUES (1, 1, 2);
+INSERT INTO UNELTE_SARCINI VALUES (2, 1, 1);
+INSERT INTO UNELTE_SARCINI VALUES (3, 2, 1);
+INSERT INTO UNELTE_SARCINI VALUES (4, 2, 2);
+INSERT INTO UNELTE_SARCINI VALUES (5, 3, 1);
+INSERT INTO UNELTE_SARCINI VALUES (6, 3, 1);
+INSERT INTO UNELTE_SARCINI VALUES (1, 4, 1);
+INSERT INTO UNELTE_SARCINI VALUES (2, 5, 2);
+INSERT INTO UNELTE_SARCINI VALUES (3, 6, 1);
+INSERT INTO UNELTE_SARCINI VALUES (4, 6, 2);
+
+COMMIT;
+/
+--ex 6 
+
+CREATE OR REPLACE PROCEDURE gestionare_date(
+    p_parcela_id IN NUMBER
+) AS
+    TYPE t_membri IS TABLE OF VARCHAR2(200);
+    membri_table t_membri;
+
+    -- Varray pentru plante
+    TYPE t_plante IS VARRAY(100) OF VARCHAR2(50);
+    plante_varray t_plante;
+
+    TYPE t_cheltuieli IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+    cheltuieli_table t_cheltuieli;
+
+    v_nume VARCHAR2(50);
+    v_email VARCHAR2(100);
+    v_planta VARCHAR2(50);
+    v_sarcina_id NUMBER;
+    v_cheltuiala NUMBER;
+BEGIN
+    membri_table := t_membri();
+    FOR rec IN (
+        SELECT nume || ' ' || prenume AS nume_complet, email
+        FROM MEMBRII
+    ) LOOP
+        membri_table.EXTEND;
+        membri_table(membri_table.LAST) := rec.nume_complet || ' (' || rec.email || ')';
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('Membrii activi:');
+    FOR i IN 1..membri_table.COUNT LOOP
+        DBMS_OUTPUT.PUT_LINE(membri_table(i));
+    END LOOP;
+
+    -- Populare Varray cu plante din parcela specificat?
+    plante_varray := t_plante();
+    FOR rec IN (
+        SELECT p.nume
+        FROM PLANTE p
+        JOIN PLANTE_PARCELE pp ON p.planta_id = pp.planta_id
+        WHERE pp.atribuire_parcela_id = p_parcela_id
+    ) LOOP
+        plante_varray.EXTEND;
+        plante_varray(plante_varray.LAST) := rec.nume;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('Plante cultivate  n parcela specificata:');
+    FOR i IN 1..plante_varray.COUNT LOOP
+        DBMS_OUTPUT.PUT_LINE('- ' || plante_varray(i));
+    END LOOP;
+
+    FOR rec IN (
+        SELECT sarcina_id, durata_estimata * 10 AS cheltuiala_estimativa
+        FROM SARCINI_INTRETINERE
+    ) LOOP
+        cheltuieli_table(rec.sarcina_id) := rec.cheltuiala_estimativa;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('Cheltuieli estimate pentru sarcini:');
+    v_sarcina_id := cheltuieli_table.FIRST;
+    WHILE v_sarcina_id IS NOT NULL LOOP
+        DBMS_OUTPUT.PUT_LINE('Sarcina ID ' || v_sarcina_id || ': ' || cheltuieli_table(v_sarcina_id) || ' RON');
+        v_sarcina_id := cheltuieli_table.NEXT(v_sarcina_id);
+    END LOOP;
+END;
+/
+BEGIN
+    gestionare_date(2);
+END;
+/
+--ex 7 
+CREATE OR REPLACE PROCEDURE membrii_Plante IS
+    
+    --cursor simplu
+    CURSOR c_membrii IS
+        SELECT * 
+        FROM membrii;
+    
+    --cursor parametrizat
+    CURSOR c_plante(p_membru_id NUMBER) IS
+        SELECT  pl.nume
+            FROM plante pl
+            JOIN plante_parcele pp ON pp.planta_id = pl.planta_id
+            JOIN atribuiri_parcele ap ON pp.atribuire_parcela_id = ap.atribuire_id
+            WHERE ap.membru_id = p_membru_id;
+    BEGIN
+    
+        FOR membru IN c_membrii LOOP
+            DBMS_OUTPUT.PUT_LINE(membru.Nume || ' ' || membru.prenume || ' cultiva: ');
+            FOR planta in c_plante(membru.membru_id) LOOP
+                
+                DBMS_OUTPUT.PUT_LINE(planta.nume);
+                
+            END LOOP;
+            DBMS_OUTPUT.PUT_LINE(' ');
+        END LOOP;
+    
+    
+    END membrii_plante; 
+            
+            
+/
+
+BEGIN
+    membrii_plante();
+END;
+/
+--ex 8
+
+CREATE OR REPLACE FUNCTION nrRecolteExcelente(p_membru_id NUMBER) 
+    RETURN NUMBER
+    IS
+    
+   CURSOR c_recolte(p_atribuire_parcela_id NUMBER, p_id NUMBER)IS
+        SELECT *
+            FROM recolte
+            WHERE recolte.atribuire_parcela_id = p_atribuire_parcela_id and recolte.planta_id = p_id;
+            
+    CURSOR c_plante IS
+        SELECT pp.atribuire_parcela_id, pl.planta_id
+            FROM plante pl
+            JOIN plante_parcele pp ON pp.planta_id = pl.planta_id
+            JOIN atribuiri_parcele ap ON pp.atribuire_parcela_id = ap.atribuire_id
+            WHERE ap.membru_id = p_membru_id;
+            
+    v_counter NUMBER := 0;
+    BEGIN
+        FOR planta in c_plante LOOP
+            FOR recolta IN c_recolte(planta.atribuire_parcela_id, planta.planta_id) LOOP
+         
+                IF recolta.evaluare_calitate = 'Excelenta' THEN
+                    v_counter := v_counter + 1;
+                END IF;
+ 
+            END LOOP;
+            
+        END LOOP;
+        RETURN v_counter;
+        
+        EXCEPTION 
+
+            WHEN NO_DATA_FOUND THEN
+                RAISE_APPLICATION_ERROR(-20001, 'NO_DATA_FOUND.');
+            WHEN TOO_MANY_ROWS THEN
+                RAISE_APPLICATION_ERROR(-20002, 'TOO_MANY_ROWS.');
+            WHEN OTHERS THEN
+                RAISE_APPLICATION_ERROR(-20003, 'A aparut o eroare');
+    END nrRecolteExcelente; 
+            
+ /  
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(nrRecolteExcelente(1));
+    DBMS_OUTPUT.PUT_LINE(nrRecolteExcelente(29));
+END;
+/
+--ex 9
+CREATE OR REPLACE PROCEDURE verificare_membru_plante(
+
+        p_membru_id NUMBER,
+        p_locatie VARCHAR2,
+        p_sezon VARCHAR2 DEFAULT NULL
+)
+IS
+    TYPE t_membru IS RECORD(
+          v_nume            VARCHAR2(50),
+          v_prenume         VARCHAR2(50),
+          v_nume_planta     VARCHAR2(50),
+          v_locatie_parcela VARCHAR2(100)
+    );
+    
+    TYPE t_plante IS TABLE OF t_membru;
+    membru_plante t_plante := t_plante();
+    
+    exceptie_parcela_invalida EXCEPTION;
+    exceptie_sezon_invalid EXCEPTION;
+    
+    v_count_parcele NUMBER := 0;
+    v_count_plante NUMBER := 0;
+
+    CURSOR c_plante IS
+        SELECT m.nume, m.prenume, pl.nume AS nume_planta, p.locatie AS locatie_parcela
+        FROM MEMBRII m
+        JOIN ATRIBUIRI_PARCELE ap ON ap.membru_id = m.membru_id
+        JOIN PARCELE p ON p.parcela_id = ap.parcela_id
+        JOIN PLANTE_PARCELE pp ON pp.atribuire_parcela_id = ap.atribuire_id
+        JOIN PLANTE pl ON pl.planta_id = pp.planta_id
+        WHERE m.membru_id = p_membru_id
+              AND p.locatie = p_locatie
+              AND (p_sezon IS NULL OR pl.sezon = p_sezon);
+BEGIN
+
+    SELECT COUNT(*)
+        INTO v_count_parcele
+        FROM MEMBRII m
+        JOIN ATRIBUIRI_PARCELE ap ON ap.membru_id = m.membru_id
+        JOIN PARCELE p ON p.parcela_id = ap.parcela_id
+        WHERE m.membru_id = p_membru_id AND p.locatie = p_locatie;
+    
+    IF v_count_parcele = 0 THEN
+        RAISE exceptie_parcela_invalida;
+    END IF;
+
+    
+    IF p_sezon IS NULL THEN
+        SELECT COUNT(*)
+            INTO v_count_plante
+            FROM MEMBRII m
+            JOIN ATRIBUIRI_PARCELE ap ON ap.membru_id = m.membru_id
+            JOIN PARCELE p ON p.parcela_id = ap.parcela_id
+            JOIN PLANTE_PARCELE pp ON pp.atribuire_parcela_id = ap.atribuire_id
+            JOIN PLANTE pl ON pl.planta_id = pp.planta_id
+            WHERE m.membru_id = p_membru_id AND p.locatie = p_locatie AND (pl.sezon IS NULL);
+    ELSE
+        SELECT COUNT(*)
+            INTO v_count_plante
+            FROM MEMBRII m
+            JOIN ATRIBUIRI_PARCELE ap ON ap.membru_id = m.membru_id
+            JOIN PARCELE p ON p.parcela_id = ap.parcela_id
+            JOIN PLANTE_PARCELE pp ON pp.atribuire_parcela_id = ap.atribuire_id
+            JOIN PLANTE pl ON pl.planta_id = pp.planta_id
+            WHERE m.membru_id = p_membru_id AND p.locatie = p_locatie AND pl.sezon = p_sezon;
+    END IF;
+    
+    IF v_count_plante = 0 THEN
+        RAISE exceptie_sezon_invalid;
+    END IF;
+    
+    FOR r_planta IN c_plante LOOP
+    DBMS_OUTPUT.PUT_LINE('Nume: ' || r_planta.nume || ', Prenume: ' || r_planta.prenume ||
+                         ', Planta: ' || r_planta.nume_planta || ', Locatie: ' || r_planta.locatie_parcela);
+    END LOOP;
+
+    
+     EXCEPTION 
+     
+            WHEN exceptie_parcela_invalida THEN
+                RAISE_APPLICATION_ERROR(-20004, 'Membrul introdus nu are parcela respectiva.');
+            WHEN exceptie_sezon_invalid THEN
+                RAISE_APPLICATION_ERROR(-20005, 'Pe parcela respectiva, membrul respectiv nu cultiva plante pentru sezonul respectiv.');
+            
+            
+            WHEN NO_DATA_FOUND THEN
+                RAISE_APPLICATION_ERROR(-20001, 'NO_DATA_FOUND.');
+            WHEN TOO_MANY_ROWS THEN
+                RAISE_APPLICATION_ERROR(-20002, 'TOO_MANY_ROWS.');
+            WHEN OTHERS THEN
+                RAISE_APPLICATION_ERROR(-20003, 'A aparut o eroare');
+end verificare_membru_plante;
+/
+
+BEGIN
+    verificare_membru_plante(1, 'Zona A1', 'Vara');
+END;
+/
+BEGIN
+    verificare_membru_plante(5, 'Zona B1', NULL);
+END;
+/
+BEGIN
+    verificare_membru_plante(3, 'Zona B1', NULL);
+END;
+/
+--ex 10
+CREATE OR REPLACE TRIGGER trg_validare_cantitate_cmd
+BEFORE INSERT OR UPDATE ON UNELTE_SARCINI
+DECLARE
+    v_invalid_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_invalid_count
+    FROM UNELTE_SARCINI
+    WHERE cantitate < 1
+    AND ROWID IN (
+        SELECT ROWID
+        FROM UNELTE_SARCINI
+        MINUS
+        SELECT ROWID
+        FROM UNELTE_SARCINI
+        WHERE cantitate >= 1
+    );
+    IF v_invalid_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Cantitatea de unelte trebuie s? fie mai mare decât 0.');
+    END IF;
+END;
+/
+
+INSERT INTO UNELTE_SARCINI (unealta_id, sarcina_id, cantitate)
+VALUES (1, 1, 0); 
+/
+--ex 11
+
+CREATE OR REPLACE TRIGGER trg_validare_calitate_unealta
+BEFORE INSERT OR UPDATE ON UNELTE_SARCINI
+FOR EACH ROW
+DECLARE
+    v_id_unealta NUMBER := :NEW.unealta_id;
+    v_calitate VARCHAR2(20) ;
+BEGIN
+
+            SELECT u.stare
+                INTO v_calitate
+                FROM unelte u
+                WHERE u.unealta_id = v_id_unealta;
+                
+    IF v_calitate = 'Necesita Reparatii' THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Unealta este stricata.');
+    END IF;
+END;
+/
+INSERT INTO UNELTE_SARCINI (unealta_id, sarcina_id, cantitate)
+VALUES (5, 10, 1); 
+/
+--ex 12
+CREATE TABLE Schema_Change_Logs (
+    Event_Type VARCHAR2(50),
+    Object_Type VARCHAR2(50),
+    Object_Name VARCHAR2(255),
+    Event_Time TIMESTAMP
+);
+/
+CREATE OR REPLACE TRIGGER Schema_Change_Log_Trigger
+AFTER CREATE OR ALTER OR DROP ON SCHEMA
+DECLARE
+BEGIN
+    INSERT INTO Schema_Change_Logs (Event_Type, Object_Type, Object_Name, Event_Time)
+    VALUES (ORA_SYSEVENT, ORA_DICT_OBJ_TYPE, ORA_DICT_OBJ_NAME, SYSDATE);
+END;
+/
+
+CREATE TABLE test_trigger(test_coloana NUMBER(1));
+
+SELECT * FROM Schema_Change_Logs;
+/
